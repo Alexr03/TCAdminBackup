@@ -29,11 +29,9 @@
                 Html.EnableClientValidation(false);
                 i.Add().Field(x => x.S3Enabled).Label(l => l.Text("S3 Backup"));
                 i.Add().Field(x => x.FtpEnabled).Label(l => l.Text("FTP Backup"));
-                i.Add().Field(x => x.GoogleDriveEnabled).Label(l => l.Text("Google Drive Backup"));
                 Html.EnableClientValidation(true);
             });
             items.AddGroup().Label("Limitations").Items(i => { i.Add().Field(x => x.DefaultS3Capacity).Label(l => l.Text("Default S3 Capacity")).Hint("Hint: Measured in bytes"); });
-            items.AddGroup().Label("Google Drive Settings").Items(i => { i.Add().Field(x => x.GoogleApiKey).Label(l => l.Text("Google API Key")); });
         })
         )
 </div>
@@ -42,6 +40,5 @@
     $(document).ready(function () {
         $("#S3Enabled").attr("data-validate", "false");
         $("#FtpEnabled").attr("data-validate", "false");
-        $("#GoogleDriveEnabled").attr("data-validate", "false");
     })
 </script>

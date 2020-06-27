@@ -10,13 +10,7 @@ namespace TCAdminBackup.Configuration
         
         [Required(AllowEmptyStrings = true)]
         public bool FtpEnabled { get; set; }
-        
-        [Required(AllowEmptyStrings = true)]
-        public bool GoogleDriveEnabled { get; set; }
-        
-        [Required(AllowEmptyStrings = true)]
-        public string GoogleApiKey { get; set; }
-        
+
         [Required(AllowEmptyStrings = true)]
         public long DefaultS3Capacity { get; set; } = 5_000_000_000;
 

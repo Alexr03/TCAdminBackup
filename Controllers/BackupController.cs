@@ -251,11 +251,6 @@ namespace TCAdminBackup.Controllers
                 accessibleSolutions.Add("ftp");
             }
 
-            if (settings.GoogleDriveEnabled)
-            {
-                accessibleSolutions.Add("gdrive");
-            }
-
             return accessibleSolutions;
         }
 
