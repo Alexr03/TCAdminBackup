@@ -19,7 +19,7 @@ filemanagerNS.commands.BackupCommand = filemanagerNS.FileManagerCommand.extend({
         $('<div id="backupDialog"></div>').kendoDialog({
           title: "Kendo Dialog Component",
           open: function(){
-                document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path + "to:";
+                document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path + " to:";
           },
           close: function(){
                 const dialog = $("#backupDialog").data("kendoDialog");
@@ -60,6 +60,7 @@ function BackupFile(){
         contentType: "application/json; charset=utf-8",
         dataType: "text",
         error: function (e) {
+            e = JSON.parse(e);
             kendo.ui.progress($(".k-filemanager-view"), false);
             OnError(e);
         },
