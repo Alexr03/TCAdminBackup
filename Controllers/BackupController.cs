@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using TCAdmin.SDK.Objects;
 using TCAdmin.SDK.Web.FileManager;
 using TCAdmin.SDK.Web.MVC.Controllers;
 using TCAdminBackup.BackupSolutions;
@@ -238,7 +239,7 @@ namespace TCAdminBackup.Controllers
             var s3Limit = service.Variables["S3:LIMIT"] != null
                 ? long.Parse(service.Variables["S3:LIMIT"].ToString())
                 : long.Parse(5_000_000_000.ToString());
-            if (s3Limit > 0 && settings.S3Enabled)
+            if (FileServer.GetFileServers().S3FileServers().Any() && s3Limit > 0 && settings.S3Enabled)
             {
                 accessibleSolutions.Add("s3");
             }
@@ -246,7 +247,7 @@ namespace TCAdminBackup.Controllers
             var ftpLimit = service.Variables["Ftp:LIMIT"] != null
                 ? long.Parse(service.Variables["Ftp:LIMIT"].ToString())
                 : long.Parse(5_000_000_000.ToString());
-            if (ftpLimit > 0 && settings.FtpEnabled)
+            if (FileServer.GetFileServers().FtpFileServers().Any() && ftpLimit > 0 && settings.FtpEnabled)
             {
                 accessibleSolutions.Add("ftp");
             }
