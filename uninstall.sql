@@ -1,0 +1,1 @@
+﻿DROP TABLE tcmodule_backups;

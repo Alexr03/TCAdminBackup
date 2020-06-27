@@ -1,0 +1,47 @@
+﻿@using System.Web.Mvc.Html
+@using Kendo.Mvc.UI
+@using TCAdmin.SDK.Web.MVC.Extensions
+@using TCAdminBackup.Configuration
+@model TCAdminBackup.Configuration.GlobalBackupSettings
+
+@{
+    ViewBag.Title = "Global Backup Settings";
+    Layout = this.GetTemplateFile("Shared/Main.cshtml", true);
+}
+
+@section sidebar{
+    @Html.Partial("_DefaultSidebar")
+}
+
+<div class="k-content" style="width: 600px">
+    @(Html.Kendo().Form<GlobalBackupSettings>()
+        .Name("settings")
+        .HtmlAttributes(new {action = "/BackupAdmin", method = "POST"})
+        .Validatable(v =>
+        {
+            v.ValidationSummary(vs => vs.Enable(false));
+            v.ValidateOnBlur(false);
+        })
+        .Items(items =>
+        {
+            items.AddGroup().Label("Backup Types").Items(i =>
+            {
+                Html.EnableClientValidation(false);
+                i.Add().Field(x => x.S3Enabled).Label(l => l.Text("S3 Backup"));
+                i.Add().Field(x => x.FtpEnabled).Label(l => l.Text("FTP Backup"));
+                i.Add().Field(x => x.GoogleDriveEnabled).Label(l => l.Text("Google Drive Backup"));
+                Html.EnableClientValidation(true);
+            });
+            items.AddGroup().Label("Limitations").Items(i => { i.Add().Field(x => x.DefaultS3Capacity).Label(l => l.Text("Default S3 Capacity")).Hint("Hint: Measured in bytes"); });
+            items.AddGroup().Label("Google Drive Settings").Items(i => { i.Add().Field(x => x.GoogleApiKey).Label(l => l.Text("Google API Key")); });
+        })
+        )
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#S3Enabled").attr("data-validate", "false");
+        $("#FtpEnabled").attr("data-validate", "false");
+        $("#GoogleDriveEnabled").attr("data-validate", "false");
+    })
+</script>

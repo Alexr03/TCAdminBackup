@@ -1,0 +1,361 @@
+﻿@using Kendo.Mvc.UI
+@using TCAdminBackup.Controllers
+@model Models.Game.FileManager.FileManagerModel
+
+@{
+    var accessibleSolutions = BackupController.AccessibleSolutions(Model.Service.ServiceId);
+}
+
+<script>
+
+filemanagerNS.commands.BackupToS3Command = filemanagerNS.FileManagerCommand.extend({
+    exec: function () {
+        const that = this,
+            filemanager = that.filemanager, // get the kendo.ui.FileManager instance
+            options = that.options, // get the options passed through the tool
+            target = options.target; // options.target is available only when command is executed from the context menu
+        let selectedFiles = filemanager.getSelected(); // get the selected files
+        
+        $('<div id="backupDialog"></div>').kendoDialog({
+          title: "Kendo Dialog Component",
+          open: function(){
+                document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path
+          },
+          close: function(){
+                const dialog = $("#backupDialog").data("kendoDialog");
+                dialog.destroy();  
+          },
+          content: `
+            <h4 id="backupTitle">Backup</h4>
+            @(Html.Kendo().DropDownList().Name("backupSolution")
+                .Items(i =>
+                {
+                    foreach (var solution in accessibleSolutions)
+                    {
+                        i.Add().Text(solution.ToUpper()).Value(accessibleSolutions.IndexOf(solution).ToString());
+                    }
+                })
+                .OptionLabel("Select where to backup to.")
+                .SelectedIndex(0)
+                .Enable(true)
+                .ToClientTemplate());
+          `,
+          visible: false,
+          actions: [
+                {text: "Cancel"},
+                {text: "Backup", primary: true, action: BackupFile, cssClass: "k-button-ok"},
+          ]
+        }).data("kendoDialog").open();
+    }
+});
+
+function BackupFile(){
+    const fileManager = $("#filemanager").getKendoFileManager();
+    let selectedFiles = filemanager.getSelected();
+    
+    $.ajax({
+        type: "POST",
+        url: "/Backup/BackupFile/@(Model.Service.ServiceId)",
+        data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").value() }),
+        contentType: "application/json; charset=utf-8",
+        dataType: "text",
+        error: function (e) {
+            kendo.ui.progress($(".k-filemanager-view"), false);
+            OnError(e);
+        },
+        success: function (e) {
+            filemanager.refresh();
+            kendo.ui.progress($(".k-filemanager-view"), false);
+            OnSuccess(e);
+        }
+    });
+    
+    kendo.ui.progress($(".k-filemanager-view"), false);
+}
+
+function BackupsPrompt() {
+    return $('<div id="backups"></div>').kendoDialog({
+        width: "400px",
+        buttonLayout: "normal",
+        title: "Backups",
+        closable: true,
+        visible: false,
+        modal: true,
+        collapsible: true,
+        open: OnBackupsPromptOpen,
+        close: OnBackupsPromptClose,
+        content: `
+                <div id="backupTabStrip">
+                    <ul>
+                        @if (accessibleSolutions.Contains("s3"))
+                        {
+                            <li>
+                                S3 Public Storage
+                            </li>
+                        }
+                        @if (accessibleSolutions.Contains("ftp"))
+                        {
+                            <li>
+                                FTP
+                            </li>
+                        }
+                        @if (accessibleSolutions.Contains("gdrive"))
+                        {
+                            <li>
+                                Google Drive
+                            </li>
+                        }
+                    </ul>
+                    <div>
+                        <div>
+                            <div id="s3Content" style="display: none;">
+                                <h2>S3 Public Storage</h2>
+                                <h4>Storage Capacity</h4>
+                                <div id="s3StorageProgress" style="width: 100%;" />
+                                <h4>Select a backup:</h4>
+                                <input id="s3BackupsList" style="width: 100%;" />
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <div id="ftpContent">
+                                <h2>File Transfer Protocol</h2>
+                                <h4>Select a backup:</h4>
+                                <input id="ftpBackupsList" style="width: 100%;" />
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div>
+                            <h2>Google Drive</h2>
+                            <p>Google Drive stuff here.</p>
+                        </div>
+                    </div>
+                </div>
+                `,
+        actions: [
+            { text: 'Cancel' },
+            { text: 'Delete', action:DeleteBackup },
+            { text: 'Download', action:DownloadBackup },
+            { text: 'Restore', primary: true, action:RestoreBackup }
+        ]
+    }).data("kendoDialog").open().result;
+}
+
+function DownloadBackup(){
+    const fileManager = $("#filemanager").getKendoFileManager();
+    const backups = $("#s3BackupsList").data("kendoDropDownList");
+    const backupId = backups.value();
+    showTabStripLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/Backup/Download/@(Model.Service.ServiceId)",
+        data: JSON.stringify({ "backupId": backupId}),
+        contentType: "application/json; charset=utf-8",
+        dataType: "text",
+        error: function (e) {
+            hideTabStripLoading();
+            OnError(e);
+        },
+        success: function (e) {
+            e = JSON.parse(e);
+            fileManager.refresh();
+            window.location = e.url;
+            hideTabStripLoading();
+        }
+    });
+    
+    return false;
+}
+
+function DeleteBackup(){
+    const fileManager = $("#filemanager").getKendoFileManager();
+    const backups = $("#s3BackupsList").data("kendoDropDownList");
+    const backupId = backups.value();
+    showTabStripLoading();
+
+    $.ajax({
+        type: "POST",
+        url: "/Backup/Delete/@(Model.Service.ServiceId)",
+        data: JSON.stringify({ "backupId": backupId}),
+        contentType: "application/json; charset=utf-8",
+        dataType: "text",
+        error: function (e) {
+            hideTabStripLoading();
+            OnError(e);
+        },
+        success: function (e) {
+            fileManager.refresh();
+            backups.dataSource.read();
+            OnSuccess(e);
+            hideTabStripLoading();
+        }
+    });
+    
+    return false;
+}
+
+function RestoreBackup(){
+    const fileManager = $("#filemanager").getKendoFileManager();
+    let backups = $("#s3BackupsList").data("kendoDropDownList")
+    const backupId = backups.value();
+    kendo.ui.progress($(".k-fileManager-view"), true);
+
+    $.ajax({
+        type: "POST",
+        url: "/Backup/Restore/@(Model.Service.ServiceId)",
+        data: JSON.stringify({ target: fileManager.path(), "backupId": backupId}),
+        contentType: "application/json; charset=utf-8",
+        dataType: "text",
+        error: function (e) {
+            kendo.ui.progress($(".k-fileManager-view"), false);
+            OnError(e);
+        },
+        success: function (e) {
+            fileManager.refresh();
+            kendo.ui.progress($(".k-fileManager-view"), false);
+            OnSuccess(e);
+        }
+    });
+}
+
+function OnBackupsPromptOpen(){
+    //Tabstrip
+    const tabStrip = $("#backupTabStrip").kendoTabStrip({
+        select: showTabStripLoading,
+        contentLoaded: hideTabStripLoading,
+        activate: hideTabStripLoading,
+        animation:  {
+            open: {
+                effects: "fadeIn"
+            }
+        }
+    }).data("kendoTabStrip");
+    
+    tabStrip.select(0);
+    
+    @if (accessibleSolutions.Contains("s3"))
+    {
+        <text>
+            showTabStripLoading();
+            // Storage Capacity
+            $.ajax({
+                type: "GET",
+                url: "/Backup/Capacity/@(Model.Service.ServiceId)",
+                contentType: "application/json; charset=utf-8",
+                dataType: "text",
+                error: function (e) {
+                    OnError(e);
+                },
+                success: function (e) {
+                    e = JSON.parse(e);
+                    const progressBar = $("#s3StorageProgress").kendoProgressBar({
+                        min: 0,
+                        max: e.limit,
+                        value: e.value,
+                        type: "value",
+                        showStatus: true,
+                        animation: {
+                            duration: 400
+                        }
+                    }).data("kendoProgressBar");
+                    
+                    progressBar.progressStatus.text(humanFileSize(e.value) + "/" + humanFileSize(e.limit));
+                    
+                    const s3Content = document.getElementById("s3Content")
+                    s3Content.style.display = "block"
+                }
+            });
+            //S3 Backup List
+            $("#s3BackupsList").kendoDropDownList({
+                dataTextField: "name",
+                dataValueField: "value",
+                index: 0,
+                filter: "contains",
+                noDataTemplate: 'Cannot find any backups for @(Model.Service.NameNoHtml)',
+                dataSource: {
+                    transport: {
+                        read: {
+                            dataType: "json",
+                            url: "/Backup/List/@(Model.Service.ServiceId)",
+                            data: { "backupType": 0 },
+                            cache: false
+                        }
+                    }
+                }
+            });
+            //FTP Backup List
+            $("#ftpBackupsList").kendoDropDownList({
+                dataTextField: "name",
+                dataValueField: "value",
+                index: 0,
+                filter: "contains",
+                noDataTemplate: 'Cannot find any backups for @(Model.Service.NameNoHtml)',
+                dataSource: {
+                    transport: {
+                        read: {
+                            dataType: "json",
+                            url: "/Backup/List/@(Model.Service.ServiceId)",
+                            data: { "backupType": 1 },
+                            cache: false
+                        }
+                    }
+                }
+            });
+            hideTabStripLoading();
+        </text>
+    }
+}
+
+function OnBackupsPromptClose(){
+    const dialog = $("#backups").data("kendoDialog");
+    dialog.destroy();
+}
+
+function OnSuccess(e) {
+    e = JSON.parse(e);
+    if (e.responseText)
+        TCAdmin.Ajax.ShowBasicDialog("Success", e.responseText);
+    else if (e.statusText)
+        TCAdmin.Ajax.ShowBasicDialog("Success", e.statusText);
+    else
+        TCAdmin.Ajax.ShowBasicDialog("Success", e.errorThrown);
+
+    filemanager = $("#filemanager").getKendoFileManager();
+    filemanager.refresh();
+}
+
+function showTabStripLoading(){
+    const tabStrip = $("#backupTabStrip").getKendoTabStrip();
+    kendo.ui.progress(tabStrip.element, true);
+}
+
+function hideTabStripLoading(){
+    const tabStrip = $("#backupTabStrip").getKendoTabStrip();
+    kendo.ui.progress(tabStrip.element, false);
+}
+
+function humanFileSize(bytes, si=false, dp=1) {
+  const thresh = si ? 1000 : 1024;
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + ' B';
+  }
+
+  const units = si 
+    ? ['kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'] 
+    : ['KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+  let u = -1;
+  const r = 10**dp;
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (Math.round(Math.abs(bytes) * r) / r >= thresh && u < units.length - 1);
+
+  return bytes.toFixed(dp) + ' ' + units[u];
+}
+
+</script>
