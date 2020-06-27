@@ -10,6 +10,8 @@
     "RestSharp.dll",
     "Minio.dll",
     "FluentFTP.dll",
-    "Crc32.NET.dll"
+    "Crc32.NET.dll",
+    "System.Reactive.dll",
+    "System.Reactive.Linq.dll"
   ]
 }
