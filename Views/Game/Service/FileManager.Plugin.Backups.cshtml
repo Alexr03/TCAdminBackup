@@ -8,7 +8,7 @@
 
 <script>
 
-filemanagerNS.commands.BackupToS3Command = filemanagerNS.FileManagerCommand.extend({
+filemanagerNS.commands.BackupCommand = filemanagerNS.FileManagerCommand.extend({
     exec: function () {
         const that = this,
             filemanager = that.filemanager, // get the kendo.ui.FileManager instance
@@ -19,7 +19,7 @@ filemanagerNS.commands.BackupToS3Command = filemanagerNS.FileManagerCommand.exte
         $('<div id="backupDialog"></div>').kendoDialog({
           title: "Kendo Dialog Component",
           open: function(){
-                document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path
+                document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path + "to:";
           },
           close: function(){
                 const dialog = $("#backupDialog").data("kendoDialog");

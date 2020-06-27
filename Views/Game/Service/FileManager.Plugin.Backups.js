@@ -11,7 +11,7 @@
 
     //Context Menu
     let contextmenu = $("ul[data-role='contextmenu']");
-    const backupItem = $('<li class="k-item k-menu-item k-state-default" data-command="BackupToS3Command" role="menuitem" data-uid="undefined"><span class="k-link k-menu-link"><span class="k-icon k-i-cloud"></span>Backup to S3</span></li>');
+    const backupItem = $('<li class="k-item k-menu-item k-state-default" data-command="BackupCommand" role="menuitem" data-uid="undefined"><span class="k-link k-menu-link"><span class="k-icon k-i-cloud"></span>Backup to S3</span></li>');
     const downloadItem = contextmenu.find('*[data-command="DownloadCommand"]');
 
     fileManager.contextMenu.bind("open", function (e) {
