@@ -49,31 +49,6 @@ filemanagerNS.commands.BackupCommand = filemanagerNS.FileManagerCommand.extend({
     }
 });
 
-function BackupFile(){
-    const fileManager = $("#filemanager").getKendoFileManager();
-    let selectedFiles = filemanager.getSelected();
-    
-    $.ajax({
-        type: "POST",
-        url: "/Backup/BackupFile/@(Model.Service.ServiceId)",
-        data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").value() }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "text",
-        error: function (e) {
-            e = JSON.parse(e);
-            kendo.ui.progress($(".k-filemanager-view"), false);
-            OnError(e);
-        },
-        success: function (e) {
-            filemanager.refresh();
-            kendo.ui.progress($(".k-filemanager-view"), false);
-            OnSuccess(e);
-        }
-    });
-    
-    kendo.ui.progress($(".k-filemanager-view"), false);
-}
-
 function BackupsPrompt() {
     return $('<div id="backups"></div>').kendoDialog({
         width: "400px",
@@ -100,6 +75,12 @@ function BackupsPrompt() {
                                 FTP
                             </li>
                         }
+                        @if (accessibleSolutions.Contains("local"))
+                        {
+                            <li>
+                                Local
+                            </li>
+                        }
                     </ul>
                     <div>
                         <div>
@@ -121,6 +102,15 @@ function BackupsPrompt() {
                             </div>
                         </div>
                     </div>
+                    <div>
+                        <div>
+                            <div id="localContent">
+                                <h2>Local Storage</h2>
+                                <h4>Select a backup:</h4>
+                                <input id="localBackupsList" style="width: 100%;" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 `,
         actions: [
@@ -132,36 +122,40 @@ function BackupsPrompt() {
     }).data("kendoDialog").open().result;
 }
 
-function DownloadBackup(){
+function BackupFile(){
     const fileManager = $("#filemanager").getKendoFileManager();
-    const backups = $("#s3BackupsList").data("kendoDropDownList");
-    const backupId = backups.value();
-    showTabStripLoading();
-
+    let selectedFiles = fileManager.getSelected();
+    kendo.ui.progress($(".k-filemanager-view"), true);
+    
     $.ajax({
         type: "POST",
-        url: "/Backup/Download/@(Model.Service.ServiceId)",
-        data: JSON.stringify({ "backupId": backupId}),
+        url: "/Backup/BackupFile/@(Model.Service.ServiceId)",
+        data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").value() }),
         contentType: "application/json; charset=utf-8",
         dataType: "text",
         error: function (e) {
-            hideTabStripLoading();
+            kendo.ui.progress($(".k-filemanager-view"), false);
             OnError(e);
         },
         success: function (e) {
-            e = JSON.parse(e);
             fileManager.refresh();
-            window.location = e.url;
-            hideTabStripLoading();
+            kendo.ui.progress($(".k-filemanager-view"), false);
+            OnSuccess(e);
         }
     });
+}
+
+function DownloadBackup(){
+    const backups = selectedBackupList();
+    const backupId = backups.value();
+    window.location = '/Backup/Download/@(Model.Service.ServiceId)?backupId=' + backupId;
     
     return false;
 }
 
 function DeleteBackup(){
     const fileManager = $("#filemanager").getKendoFileManager();
-    const backups = $("#s3BackupsList").data("kendoDropDownList");
+    const backups = selectedBackupList();
     const backupId = backups.value();
     showTabStripLoading();
 
@@ -188,7 +182,7 @@ function DeleteBackup(){
 
 function RestoreBackup(){
     const fileManager = $("#filemanager").getKendoFileManager();
-    let backups = $("#s3BackupsList").data("kendoDropDownList")
+    const backups = selectedBackupList();
     const backupId = backups.value();
     kendo.ui.progress($(".k-fileManager-view"), true);
 
@@ -257,6 +251,7 @@ function OnBackupsPromptOpen(){
                     s3Content.style.display = "block"
                 }
             });
+            
             //S3 Backup List
             $("#s3BackupsList").kendoDropDownList({
                 dataTextField: "name",
@@ -275,32 +270,84 @@ function OnBackupsPromptOpen(){
                     }
                 }
             });
-            //FTP Backup List
-            $("#ftpBackupsList").kendoDropDownList({
-                dataTextField: "name",
-                dataValueField: "value",
-                index: 0,
-                filter: "contains",
-                noDataTemplate: 'Cannot find any backups for @(Model.Service.NameNoHtml)',
-                dataSource: {
-                    transport: {
-                        read: {
-                            dataType: "json",
-                            url: "/Backup/List/@(Model.Service.ServiceId)",
-                            data: { "backupType": 1 },
-                            cache: false
+            </text>
+        }
+        
+        @if (accessibleSolutions.Contains("ftp"))
+        {
+            <text>
+                //FTP Backup List
+                $("#ftpBackupsList").kendoDropDownList({
+                    dataTextField: "name",
+                    dataValueField: "value",
+                    index: 0,
+                    filter: "contains",
+                    noDataTemplate: 'Cannot find any backups for @(Model.Service.NameNoHtml)',
+                    dataSource: {
+                        transport: {
+                            read: {
+                                dataType: "json",
+                                url: "/Backup/List/@(Model.Service.ServiceId)",
+                                data: { "backupType": 1 },
+                                cache: false
+                            }
                         }
                     }
-                }
-            });
-            hideTabStripLoading();
-        </text>
-    }
+                });
+            </text>
+        }
+        
+        @if (accessibleSolutions.Contains("local"))
+        {
+            <text>
+                //Local Backup List
+                $("#localBackupsList").kendoDropDownList({
+                    dataTextField: "name",
+                    dataValueField: "value",
+                    index: 0,
+                    filter: "contains",
+                    noDataTemplate: 'Cannot find any backups for @(Model.Service.NameNoHtml)',
+                    dataSource: {
+                        transport: {
+                            read: {
+                                dataType: "json",
+                                url: "/Backup/List/@(Model.Service.ServiceId)",
+                                data: { "backupType": 2 },
+                                cache: false
+                            }
+                        }
+                    }
+                });
+            </text>
+        }
+        hideTabStripLoading();
 }
 
 function OnBackupsPromptClose(){
     const dialog = $("#backups").data("kendoDialog");
     dialog.destroy();
+}
+
+function selectedBackupSolution(){
+    const backupSolution = $("#backupTabStrip").data("kendoTabStrip").select().text();
+    if(backupSolution.includes("S3")){
+        return "S3";
+    } else if(backupSolution.includes("FTP")){
+        return "FTP";
+    } else if(backupSolution.includes("Local")){
+        return "LOCAL";
+    }
+}
+
+function selectedBackupList(){
+    const backupSolution = selectedBackupSolution();
+    if(backupSolution === "S3"){
+        return $("#s3BackupsList").data("kendoDropDownList")
+    } else if(backupSolution === "FTP"){
+        return $("#ftpBackupsList").data("kendoDropDownList")
+    } else if(backupSolution === "LOCAL"){
+        return $("#localBackupsList").data("kendoDropDownList")
+    }
 }
 
 function OnSuccess(e) {

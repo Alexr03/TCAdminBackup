@@ -7,7 +7,7 @@ namespace TCAdminBackup.BackupSolutions
     {
         public bool AllowsDirectDownload { get; set; }
 
-        public readonly Service Service;
+        public Service Service;
 
         protected BackupSolution()
         {

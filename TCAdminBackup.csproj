@@ -215,6 +215,7 @@
     <ItemGroup>
         <Compile Include="BackupSolutions\BackupSolution.cs" />
         <Compile Include="BackupSolutions\FtpBackup.cs" />
+        <Compile Include="BackupSolutions\LocalBackup.cs" />
         <Compile Include="BackupSolutions\S3Backup.cs" />
         <Compile Include="Configuration\GlobalBackupSettings.cs" />
         <Compile Include="Controllers\BackupAdminController.cs" />

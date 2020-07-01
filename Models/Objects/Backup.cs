@@ -97,6 +97,8 @@ namespace TCAdminBackup.Models.Objects
                     return new S3Backup(service, user.CloudBackupsBucketName());
                 case BackupType.Ftp:
                     return new FtpBackup(service, user.CloudBackupsBucketName());
+                case BackupType.Local:
+                    return new LocalBackup(service);
                 default:
                     return null;
             }

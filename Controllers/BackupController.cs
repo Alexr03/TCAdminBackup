@@ -26,6 +26,7 @@ namespace TCAdminBackup.Controllers
         [HttpPost]
         public async Task<ActionResult> BackupFile(int id, string file, BackupType backupType = BackupType.S3)
         {
+            this.EnforceFeaturePermission("FileManager");
             if (string.IsNullOrEmpty(file))
             {
                 return new JsonHttpStatusResult(new
@@ -84,7 +85,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "Failed to backup - " + e.Message
+                    responseText = "Failed to backup - " + e.Message + " | " + e.StackTrace
                 }, HttpStatusCode.InternalServerError);
             }
 
@@ -97,6 +98,7 @@ namespace TCAdminBackup.Controllers
         [ParentAction("Service", "Home")]
         public async Task<ActionResult> Restore(int id, string target, int backupId = 0)
         {
+            this.EnforceFeaturePermission("FileManager");
             if (backupId == 0)
             {
                 return new JsonHttpStatusResult(new
@@ -122,7 +124,13 @@ namespace TCAdminBackup.Controllers
                 else
                 {
                     var bytes = await backupSolution.DownloadBytes(backup.FileName);
-                    fileSystem.CreateTextFile(saveTo, bytes);
+                    var memoryStream = new MemoryStream(bytes);
+                    var byteBuffer = new byte[1024 * 1024 * 2];
+                    memoryStream.Position = 0;
+                    while (memoryStream.Read(byteBuffer, 0, byteBuffer.Length) > 0)
+                    {
+                        fileSystem.AppendFile(saveTo, byteBuffer);
+                    }
                 }
 
                 return new JsonHttpStatusResult(new
@@ -134,7 +142,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "An error occurred: " + e.Message
+                    responseText = "An error occurred: " + e.Message + " | " + e.StackTrace
                 }, HttpStatusCode.InternalServerError);
             }
         }
@@ -142,6 +150,7 @@ namespace TCAdminBackup.Controllers
         [ParentAction("Service", "Home")]
         public async Task<ActionResult> Delete(int id, int backupId = 0)
         {
+            this.EnforceFeaturePermission("FileManager");
             if (backupId == 0)
             {
                 return new JsonHttpStatusResult(new
@@ -174,6 +183,7 @@ namespace TCAdminBackup.Controllers
         [ParentAction("Service", "Home")]
         public ActionResult List(int id, BackupType backupType)
         {
+            this.EnforceFeaturePermission("FileManager");
             var service = Service.GetSelectedService();
 
             var backups = Backup.GetBackupsForService(service, backupType).ToList();
@@ -187,27 +197,24 @@ namespace TCAdminBackup.Controllers
         [ParentAction("Service", "Home")]
         public async Task<ActionResult> Download(int id, int backupId)
         {
+            this.EnforceFeaturePermission("FileManager");
             var backup = new Backup(backupId);
             var backupSolution = backup.BackupSolution;
 
             if (backupSolution.AllowsDirectDownload)
             {
                 var downloadUrl = await backupSolution.DirectDownloadLink(backup.FileName);
-                return Json(new
-                {
-                    url = downloadUrl
-                });
+                return Redirect(downloadUrl);
             }
 
-            return new JsonHttpStatusResult(new
-            {
-                responseText = $"{backupSolution.GetType().Name} does not support direct downloads."
-            }, HttpStatusCode.Forbidden);
+            var bytes = await backup.BackupSolution.DownloadBytes(backup.FileName);
+            return File(bytes, System.Net.Mime.MediaTypeNames.Application.Octet, backup.FileName);
         }
 
         [ParentAction("Service", "Home")]
         public async Task<ActionResult> Capacity(int id)
         {
+            this.EnforceFeaturePermission("FileManager");
             var user = TCAdmin.SDK.Session.GetCurrentUser();
             var service = Service.GetSelectedService();
             var s3 = new S3Backup(FileServerModel.DetermineFileServer(service, BackupType.S3), user.CloudBackupsBucketName());
@@ -250,6 +257,11 @@ namespace TCAdminBackup.Controllers
             if (FileServer.GetFileServers().FtpFileServers().Any() && ftpLimit > 0 && settings.FtpEnabled)
             {
                 accessibleSolutions.Add("ftp");
+            }
+
+            if (settings.LocalEnabled)
+            {
+                accessibleSolutions.Add("local");
             }
 
             return accessibleSolutions;

@@ -1,5 +1,6 @@
 ﻿@using System.Web.Mvc.Html
 @using Kendo.Mvc.UI
+@using TCAdmin.SDK.Mail
 @using TCAdmin.SDK.Web.MVC.Extensions
 @using TCAdminBackup.Configuration
 @model TCAdminBackup.Configuration.GlobalBackupSettings
@@ -7,38 +8,79 @@
 @{
     ViewBag.Title = "Global Backup Settings";
     Layout = this.GetTemplateFile("Shared/Main.cshtml", true);
+    
+    var companyInfo = new CompanyInfo(2);
 }
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.6.3/css/foundation.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.6.3/js/foundation.min.js"></script>
 
 @section sidebar{
     @Html.Partial("_DefaultSidebar")
 }
 
-<div class="k-content" style="width: 600px">
-    @(Html.Kendo().Form<GlobalBackupSettings>()
-        .Name("settings")
-        .HtmlAttributes(new {action = "/BackupAdmin", method = "POST"})
-        .Validatable(v =>
-        {
-            v.ValidationSummary(vs => vs.Enable(false));
-            v.ValidateOnBlur(false);
-        })
-        .Items(items =>
-        {
-            items.AddGroup().Label("Backup Types").Items(i =>
+<div class="grid-x grid-margin-x">
+    <div class="cell medium-6">
+        @(Html.Kendo().Form<GlobalBackupSettings>()
+            .Name("settings")
+            .HtmlAttributes(new {action = "/BackupAdmin", method = "POST"})
+            .Validatable(v =>
             {
-                Html.EnableClientValidation(false);
-                i.Add().Field(x => x.S3Enabled).Label(l => l.Text("S3 Backup"));
-                i.Add().Field(x => x.FtpEnabled).Label(l => l.Text("FTP Backup"));
-                Html.EnableClientValidation(true);
-            });
-            items.AddGroup().Label("Limitations").Items(i => { i.Add().Field(x => x.DefaultS3Capacity).Label(l => l.Text("Default S3 Capacity")).Hint("Hint: Measured in bytes"); });
-        })
-        )
+                v.ValidationSummary(vs => vs.Enable(false));
+                v.ValidateOnBlur(false);
+            })
+            .Items(items =>
+            {
+                items.AddGroup().Label("Backup Types").Items(i =>
+                {
+                    i.Add().Field(x => x.S3Enabled).Label(l => l.Text("S3 Backup"));
+                    i.Add().Field(x => x.FtpEnabled).Label(l => l.Text("FTP Backup"));
+                    i.Add().Field(x => x.LocalEnabled).Label(l => l.Text("Local Backup"));
+                });
+                items.AddGroup().Label("Limitations").Items(i =>
+                {
+                    i.Add().Field(x => x.DefaultS3Capacity).Label(l => l.Text("Default S3 Capacity")).Hint("Hint: Measured in bytes. Type -1 to set each service to be disabled by default.");
+                });
+                items.AddGroup().Label("Configuration").Items(i =>
+                {
+                    i.Add().Field(x => x.LocalDirectory).Label(l => l.Text("Local Backup Directory")).Hint("Hint: You can use Service & User variables like in custom scripts.");
+                });
+            })
+            )
+    </div>
+    <div class="cell medium-6">
+        <h3>What is x Backup Type?</h3>
+        <ul>
+            <li><strong>S3</strong> is a simple storage system hosted in the cloud by multiple providers. Compatible providers:</li>
+            <ul>
+                <li><a href="https://aws.amazon.com/s3/">Amazon Web Services</a></li>
+                <li><a href="https://min.io/">Minio</a></li>
+                <li><a href="https://www.backblaze.com/b2/cloud-storage.html">Backblaze B2</a></li>
+            </ul>
+            <li><strong>FTP</strong> is a standard network protocol used for the transfer of computer files between a client and servers.</li>
+            <li><strong>Local</strong> backups are stored locally to the service.</li>
+        </ul>
+        <h3>Adding File Servers</h3>
+        <ul>
+            <li>To add a File Server <a href="/Interface/Base/CreateFileServer">Click here</a></li>
+            <li>To add a S3 Server prefix the "Name" with <strong>[S3]</strong></li>
+            <li>To add a FTP Server prefix the "Name" with <strong>[FTP]</strong></li>
+        </ul>
+        <h3>WHMCS Support</h3>
+        <ul>
+            <li>First get to grips with <a href="https://help.tcadmin.com/TCAdmin2_advanced_module_for_WHMCS#Sending_Custom_Variable_Values">sending game variables from WHMCS</a></li>
+            <li>To allow a game service 5gb of S3 storage put this in the default_values.php file: <code>$billing_api_values["gamevar_S3:LIMIT"] = "5000000000";</code></li>
+            <li>To disable S3 storage of a game service put this in the default_values.php file: <code>$billing_api_values["gamevar_S3:LIMIT"] = "-1";</code></li>
+        </ul>
+    </div>
 </div>
 
 <script>
     $(document).ready(function () {
         $("#S3Enabled").attr("data-validate", "false");
         $("#FtpEnabled").attr("data-validate", "false");
+        $("#LocalEnabled").attr("data-validate", "false");
+        
+        document.getElementsByClassName("k-form-clear")[0].style.display = 'none';
     })
 </script>

@@ -10,9 +10,15 @@ namespace TCAdminBackup.Configuration
         
         [Required(AllowEmptyStrings = true)]
         public bool FtpEnabled { get; set; }
+        
+        [Required(AllowEmptyStrings = true)]
+        public bool LocalEnabled { get; set; }
 
         [Required(AllowEmptyStrings = true)]
         public long DefaultS3Capacity { get; set; } = 5_000_000_000;
+        
+        [Required(AllowEmptyStrings = true)]
+        public string LocalDirectory { get; set; } = "$[Service.WorkingDirectory]/TCAdminBackups";
 
         public static GlobalBackupSettings Get()
         {
