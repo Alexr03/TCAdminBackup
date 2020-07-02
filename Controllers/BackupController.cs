@@ -50,12 +50,12 @@ namespace TCAdminBackup.Controllers
             var server = new Server(service.ServerId);
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
 
-            if (Backup.DoesBackupExist(service, realFileName))
+            if (Backup.DoesBackupExist(service, realFileName, backupType))
             {
                 return new JsonHttpStatusResult(new
                 {
                     responseText = $"Backup already exists with name <strong>{realFileName}</strong>"
-                }, HttpStatusCode.InternalServerError);
+                }, HttpStatusCode.BadRequest);
             }
 
             var remoteDownload = new RemoteDownload(server)

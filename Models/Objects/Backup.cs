@@ -78,12 +78,13 @@ namespace TCAdminBackup.Models.Objects
             return new Backup().GetObjectList(whereList).Cast<Backup>().ToList();
         }
         
-        public static bool DoesBackupExist(Service service, string fileName)
+        public static bool DoesBackupExist(Service service, string fileName, BackupType backupType)
         {
             var whereList = new WhereList
             {
                 {"serviceId", service.ServiceId},
-                {"fileName", fileName}
+                {"fileName", fileName},
+                {"backupType", (int)backupType}
             };
             return new Backup().GetObjectList(whereList).Cast<Backup>().ToList().Any();
         }
