@@ -1,6 +1,5 @@
 ﻿@using System.Web.Mvc.Html
 @using Kendo.Mvc.UI
-@using TCAdmin.SDK.Mail
 @using TCAdmin.SDK.Web.MVC.Extensions
 @using TCAdminBackup.Configuration
 @model TCAdminBackup.Configuration.GlobalBackupSettings
@@ -8,8 +7,6 @@
 @{
     ViewBag.Title = "Global Backup Settings";
     Layout = this.GetTemplateFile("Shared/Main.cshtml", true);
-    
-    var companyInfo = new CompanyInfo(2);
 }
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/foundation/6.6.3/css/foundation.min.css" />
@@ -43,7 +40,7 @@
                 });
                 items.AddGroup().Label("Configuration").Items(i =>
                 {
-                    i.Add().Field(x => x.LocalDirectory).Label(l => l.Text("Local Backup Directory")).Hint("Hint: You can use Service & User variables like in custom scripts.");
+                    i.Add().Field(x => x.LocalDirectory).Label(l => l.Text("Local Backup Directory")).Hint("Hint: You can use Service variables like in custom scripts.");
                 });
             })
             )

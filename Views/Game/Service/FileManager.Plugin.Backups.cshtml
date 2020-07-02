@@ -17,7 +17,7 @@ filemanagerNS.commands.BackupCommand = filemanagerNS.FileManagerCommand.extend({
         let selectedFiles = filemanager.getSelected(); // get the selected files
         
         $('<div id="backupDialog"></div>').kendoDialog({
-          title: "Kendo Dialog Component",
+          title: "Backup",
           open: function(){
                 document.getElementById("backupTitle").innerHTML = "Backup " + selectedFiles[0].path + " to:";
           },

@@ -2,3 +2,4 @@
 obj/
 outputdeployment/
 *.zip
+*.user
