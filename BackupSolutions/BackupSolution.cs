@@ -5,9 +5,9 @@ namespace TCAdminBackup.BackupSolutions
 {
     public abstract class BackupSolution
     {
-        public bool AllowsDirectDownload { get; set; }
+        public bool AllowsDirectDownload { get; protected set; }
 
-        public Service Service;
+        public Service Service { get; protected set; }
 
         protected BackupSolution()
         {
