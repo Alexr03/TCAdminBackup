@@ -189,7 +189,7 @@ function RestoreBackup(){
     $.ajax({
         type: "POST",
         url: "/Backup/Restore/@(Model.Service.ServiceId)",
-        data: JSON.stringify({ target: fileManager.path(), "backupId": backupId}),
+        data: JSON.stringify({ target: fileManager.path(), "backupId": backupId }),
         contentType: "application/json; charset=utf-8",
         dataType: "text",
         error: function (e) {
@@ -222,11 +222,12 @@ function OnBackupsPromptOpen(){
     @if (accessibleSolutions.Contains("s3"))
     {
         <text>
+            const selectedBackup = selectedBackupSolution();
             showTabStripLoading();
             // Storage Capacity
             $.ajax({
                 type: "GET",
-                url: "/Backup/Capacity/@(Model.Service.ServiceId)",
+                url: "/Backup/Capacity/@(Model.Service.ServiceId)?backupType=" + selectedBackup,
                 contentType: "application/json; charset=utf-8",
                 dataType: "text",
                 error: function (e) {

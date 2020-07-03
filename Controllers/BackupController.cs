@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using Minio;
+using TCAdmin.Interfaces.Logging;
 using TCAdmin.SDK.Objects;
 using TCAdmin.SDK.Web.FileManager;
 using TCAdmin.SDK.Web.MVC.Controllers;
@@ -48,7 +50,9 @@ namespace TCAdminBackup.Controllers
 
             var service = Service.GetSelectedService();
             var server = new Server(service.ServerId);
+            var fileSystem = server.FileSystemService;
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
+            var filePath = Path.Combine(service.WorkingDirectory, file);
 
             if (Backup.DoesBackupExist(service, realFileName, backupType))
             {
@@ -61,12 +65,12 @@ namespace TCAdminBackup.Controllers
             var remoteDownload = new RemoteDownload(server)
             {
                 DirectorySecurity = service.GetDirectorySecurityForCurrentUser(),
-                FileName = Path.Combine(service.WorkingDirectory, file)
+                FileName = filePath
             };
 
             var backupName = $"{realFileName}";
             var contents = GetFileContents(remoteDownload.GetDownloadUrl());
-            
+
             try
             {
                 await backupSolution.Backup(backupName, contents, MimeMapping.GetMimeMapping(realFileName));
@@ -78,11 +82,14 @@ namespace TCAdminBackup.Controllers
                     FileName = backupName,
                     BackupType = backupType,
                 };
+                backup.CustomFields["SIZE"] = fileSystem.GetFileSize(filePath);
                 backup.GenerateKey();
                 backup.Save();
             }
             catch (Exception e)
             {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
                 return new JsonHttpStatusResult(new
                 {
                     responseText = "Failed to backup - " + e.Message + " | " + e.StackTrace
@@ -158,7 +165,7 @@ namespace TCAdminBackup.Controllers
                     responseText = "No backup selected to delete."
                 }, HttpStatusCode.InternalServerError);
             }
-            
+
             var backup = new Backup(backupId);
             var backupSolution = backup.BackupSolution;
 
@@ -193,7 +200,7 @@ namespace TCAdminBackup.Controllers
                 value = x.BackupId
             }), JsonRequestBehavior.AllowGet);
         }
-        
+
         [ParentAction("Service", "Home")]
         public async Task<ActionResult> Download(int id, int backupId)
         {
@@ -212,16 +219,18 @@ namespace TCAdminBackup.Controllers
         }
 
         [ParentAction("Service", "Home")]
-        public async Task<ActionResult> Capacity(int id)
+        public async Task<ActionResult> Capacity(int id, BackupType backupType)
         {
             this.EnforceFeaturePermission("FileManager");
             var user = TCAdmin.SDK.Session.GetCurrentUser();
             var service = Service.GetSelectedService();
-            var s3 = new S3Backup(FileServerModel.DetermineFileServer(service, BackupType.S3), user.CloudBackupsBucketName());
-            var limit = service.Variables["S3:LIMIT"] != null
-                ? long.Parse(service.Variables["S3:LIMIT"].ToString())
-                : long.Parse(5_000_000_000.ToString());
-            var capacity = await s3.GetUsedSizeForCurrentUser();
+            var backups = Backup.GetBackupsForService(service);
+            backups.RemoveAll(x => x.BackupType != backupType);
+
+            var value = backups.Sum(backup => backup.FileSize);
+            var limit = service.Variables[$"{backupType.ToString()}:LIMIT"] != null
+                ? long.Parse(service.Variables[$"{backupType.ToString().ToUpper()}:LIMIT"].ToString())
+                : GlobalBackupSettings.Get().DefaultS3Capacity;
 
             if (limit == -1)
             {
@@ -231,10 +240,10 @@ namespace TCAdminBackup.Controllers
             return Json(new
             {
                 limit,
-                value = capacity
+                value
             }, JsonRequestBehavior.AllowGet);
         }
-        
+
         [ParentAction("Service", "Home")]
         public static List<string> AccessibleSolutions(int id)
         {
@@ -242,7 +251,7 @@ namespace TCAdminBackup.Controllers
             var accessibleSolutions = new List<string>();
             var user = TCAdmin.SDK.Session.GetCurrentUser();
             var service = Service.GetSelectedService();
-            
+
             var s3Limit = service.Variables["S3:LIMIT"] != null
                 ? long.Parse(service.Variables["S3:LIMIT"].ToString())
                 : long.Parse(5_000_000_000.ToString());
@@ -250,7 +259,7 @@ namespace TCAdminBackup.Controllers
             {
                 accessibleSolutions.Add("s3");
             }
-            
+
             var ftpLimit = service.Variables["Ftp:LIMIT"] != null
                 ? long.Parse(service.Variables["Ftp:LIMIT"].ToString())
                 : long.Parse(5_000_000_000.ToString());

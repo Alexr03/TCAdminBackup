@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Minio;
 using TCAdmin.SDK.Objects;
@@ -25,7 +24,8 @@ namespace TCAdminBackup.BackupSolutions
                 ? fileServer.CustomFields["S3:REGION"].ToString()
                 : "us-east-1";
 
-            MinioClient = new MinioClient(host, username, password, _region);
+            MinioClient = new MinioClient(host, username, password, _region).WithSSL();
+            MinioClient.SetTraceOn();
             _bucketName = bucketName;
             this.AllowsDirectDownload = true;
         }
@@ -78,21 +78,6 @@ namespace TCAdminBackup.BackupSolutions
 
             await MinioClient.RemoveObjectAsync(_bucketName, fileName);
             return true;
-        }
-
-        public async Task<long> GetUsedSizeForCurrentUser()
-        {
-            return await GetUsedSizeForUser(TCAdmin.SDK.Session.GetCurrentUser());
-        }
-
-        public async Task<long> GetUsedSizeForUser(User user)
-        {
-            ulong usedSize = 0;
-            var listObjectsAsync = MinioClient.ListObjectsAsync($"{user.UserName.ToLower()}-backups");
-
-            await listObjectsAsync.Do(x => usedSize += x.Size).LastOrDefaultAsync();
-
-            return Convert.ToInt64(usedSize);
         }
     }
 }

@@ -51,6 +51,12 @@ namespace TCAdminBackup.Models.Objects
             set => this.SetValue("fileName", value);
         }
         
+        public long FileSize
+        {
+            get => long.Parse(this.CustomFields["SIZE"].ToString());
+            set => this.CustomFields["SIZE"] = value;
+        }
+        
         public BackupType BackupType
         {
             get => (BackupType)this.GetIntegerValue("backupType");
