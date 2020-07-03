@@ -17,8 +17,19 @@ namespace TCAdminBackup.Models
         {
             var s3FileServerIds = new List<int>();
             var ftpFileServerIds = new List<int>();
-            var server = new Server(service.ServerId);
-            var datacenter = new Datacenter(server.DatacenterId);
+            Server server;
+            Datacenter datacenter;
+            if (TCAdmin.SDK.Utility.IsWebEnvironment())
+            {
+                service = Service.GetSelectedService();
+                server = Server.GetSelectedServer();
+                datacenter = Datacenter.GetSelectedDatacenter();
+            }
+            else
+            {
+                server = new Server(service.ServerId);
+                datacenter = new Datacenter(server.DatacenterId);
+            }
 
             if (service.Variables["BACKUP:FILESERVERMODEL"] != null)
             {

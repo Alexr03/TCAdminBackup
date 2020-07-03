@@ -7,12 +7,9 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Minio;
-using TCAdmin.Interfaces.Logging;
 using TCAdmin.SDK.Objects;
 using TCAdmin.SDK.Web.FileManager;
 using TCAdmin.SDK.Web.MVC.Controllers;
-using TCAdminBackup.BackupSolutions;
 using TCAdminBackup.Configuration;
 using TCAdminBackup.Models;
 using TCAdminBackup.Models.Objects;
@@ -49,7 +46,7 @@ namespace TCAdminBackup.Controllers
             }
 
             var service = Service.GetSelectedService();
-            var server = new Server(service.ServerId);
+            var server = TCAdmin.GameHosting.SDK.Objects.Server.GetSelectedServer();
             var fileSystem = server.FileSystemService;
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
             var filePath = Path.Combine(service.WorkingDirectory, file);
@@ -115,7 +112,7 @@ namespace TCAdminBackup.Controllers
             }
 
             var service = Service.GetSelectedService();
-            var fileSystem = new Server(service.ServerId).FileSystemService;
+            var fileSystem = TCAdmin.SDK.Objects.Server.GetSelectedServer().FileSystemService;
             var backup = new Backup(backupId);
             var backupSolution = backup.BackupSolution;
 

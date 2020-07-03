@@ -34,11 +34,6 @@ namespace TCAdminBackup.BackupSolutions
             FileServerModel.DetermineFileServer(service, BackupType.S3), bucketName)
         {
         }
-
-        public S3Backup(Service service) : this(FileServerModel.DetermineFileServer(service, BackupType.S3),
-            TCAdmin.SDK.Session.GetCurrentUser().CloudBackupsBucketName())
-        {
-        }
         
         public override async Task<bool> Backup(string fileName, byte[] contents, string contentType)
         {

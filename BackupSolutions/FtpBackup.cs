@@ -30,11 +30,6 @@ namespace TCAdminBackup.BackupSolutions
         {
         }
 
-        public FtpBackup(Service service) : this(FileServerModel.DetermineFileServer(service, BackupType.Ftp),
-            TCAdmin.SDK.Session.GetCurrentUser().CloudBackupsBucketName())
-        {
-        }
-
         public override Task<bool> Backup(string fileName, byte[] contents, string contentType)
         {
             var fileLocation = this.BucketName + "/" + fileName;

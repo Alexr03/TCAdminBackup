@@ -97,7 +97,7 @@ namespace TCAdminBackup.Models.Objects
 
         public static BackupSolution ParseBackupSolution(BackupType type, Service service)
         {
-            var user = TCAdmin.SDK.Session.GetCurrentUser();
+            var user = new User(service.UserId);
             switch (type)
             {
                 case BackupType.S3:
