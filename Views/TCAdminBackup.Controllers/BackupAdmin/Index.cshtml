@@ -37,6 +37,8 @@
                 items.AddGroup().Label("Limitations").Items(i =>
                 {
                     i.Add().Field(x => x.DefaultS3Capacity).Label(l => l.Text("Default S3 Capacity")).Hint("Hint: Measured in bytes. Type -1 to set each service to be disabled by default.");
+                    i.Add().Field(x => x.DefaultFtpCapacity).Label(l => l.Text("Default FTP Capacity")).Hint("Hint: Measured in bytes. Type -1 to set each service to be disabled by default.");
+                    i.Add().Field(x => x.DefaultLocalCapacity).Label(l => l.Text("Default Local Capacity")).Hint("Hint: Measured in bytes. Type -1 to set each service to be disabled by default.");
                 });
                 items.AddGroup().Label("Configuration").Items(i =>
                 {

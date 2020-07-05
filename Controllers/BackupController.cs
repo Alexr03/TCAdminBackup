@@ -50,6 +50,14 @@ namespace TCAdminBackup.Controllers
             var fileSystem = server.FileSystemService;
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
             var filePath = Path.Combine(service.WorkingDirectory, file);
+            var fileSize = fileSystem.GetFileSize(filePath);
+            if (GetBackupsSize(service, backupType) + fileSize > GetBackupsLimit(service, backupType))
+            {
+                return new JsonHttpStatusResult(new
+                {
+                    responseText = "Backing up this file will exceed your assigned capacity."
+                }, HttpStatusCode.BadRequest);
+            }
 
             if (Backup.DoesBackupExist(service, realFileName, backupType))
             {
@@ -79,7 +87,7 @@ namespace TCAdminBackup.Controllers
                     FileName = backupName,
                     BackupType = backupType,
                 };
-                backup.CustomFields["SIZE"] = fileSystem.GetFileSize(filePath);
+                backup.CustomFields["SIZE"] = fileSize;
                 backup.GenerateKey();
                 backup.Save();
             }
@@ -221,13 +229,8 @@ namespace TCAdminBackup.Controllers
             this.EnforceFeaturePermission("FileManager");
             var user = TCAdmin.SDK.Session.GetCurrentUser();
             var service = Service.GetSelectedService();
-            var backups = Backup.GetBackupsForService(service);
-            backups.RemoveAll(x => x.BackupType != backupType);
-
-            var value = backups.Sum(backup => backup.FileSize);
-            var limit = service.Variables[$"{backupType.ToString()}:LIMIT"] != null
-                ? long.Parse(service.Variables[$"{backupType.ToString().ToUpper()}:LIMIT"].ToString())
-                : GlobalBackupSettings.Get().DefaultS3Capacity;
+            var value = GetBackupsSize(service, backupType);
+            var limit = GetBackupsLimit(service, backupType);
 
             if (limit == -1)
             {
@@ -271,6 +274,25 @@ namespace TCAdminBackup.Controllers
             }
 
             return accessibleSolutions;
+        }
+
+        private static long GetBackupsSize(Service service, BackupType backupType)
+        {
+            var backups = Backup.GetBackupsForService(service);
+            backups.RemoveAll(x => x.BackupType != backupType);
+
+            var value = backups.Sum(backup => backup.FileSize);
+
+            return value;
+        }
+
+        private static long GetBackupsLimit(Service service, BackupType backupType)
+        {
+            var limit = service.Variables[$"{backupType.ToString()}:LIMIT"] != null
+                ? long.Parse(service.Variables[$"{backupType.ToString().ToUpper()}:LIMIT"].ToString())
+                : GlobalBackupSettings.GetDefaultCapacity(backupType);
+
+            return limit;
         }
 
         private static byte[] GetFileContents(string downloadUrl)
