@@ -132,7 +132,7 @@ function BackupFile(){
         url: "/Backup/BackupFile/@(Model.Service.ServiceId)",
         data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").value() }),
         contentType: "application/json; charset=utf-8",
-        dataType: "text",
+        dataType: "json",
         error: function (e) {
             kendo.ui.progress($(".k-filemanager-view"), false);
             OnError(e);
@@ -164,7 +164,7 @@ function DeleteBackup(){
         url: "/Backup/Delete/@(Model.Service.ServiceId)",
         data: JSON.stringify({ "backupId": backupId}),
         contentType: "application/json; charset=utf-8",
-        dataType: "text",
+        dataType: "json",
         error: function (e) {
             hideTabStripLoading();
             OnError(e);
@@ -191,7 +191,7 @@ function RestoreBackup(){
         url: "/Backup/Restore/@(Model.Service.ServiceId)",
         data: JSON.stringify({ target: fileManager.path(), "backupId": backupId }),
         contentType: "application/json; charset=utf-8",
-        dataType: "text",
+        dataType: "json",
         error: function (e) {
             kendo.ui.progress($(".k-fileManager-view"), false);
             OnError(e);
@@ -229,12 +229,11 @@ function OnBackupsPromptOpen(){
                 type: "GET",
                 url: "/Backup/Capacity/@(Model.Service.ServiceId)?backupType=" + selectedBackup,
                 contentType: "application/json; charset=utf-8",
-                dataType: "text",
+                dataType: "json",
                 error: function (e) {
                     OnError(e);
                 },
                 success: function (e) {
-                    e = JSON.parse(e);
                     const progressBar = $("#s3StorageProgress").kendoProgressBar({
                         min: 0,
                         max: e.limit,
@@ -352,7 +351,6 @@ function selectedBackupList(){
 }
 
 function OnSuccess(e) {
-    e = JSON.parse(e);
     if (e.responseText)
         TCAdmin.Ajax.ShowBasicDialog("Success", e.responseText);
     else if (e.statusText)
