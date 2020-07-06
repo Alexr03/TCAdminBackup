@@ -84,29 +84,36 @@ function BackupsPrompt() {
                             </li>
                         }
                     </ul>
-                    <div>
+                    @if (accessibleSolutions.Contains("s3"))
+                    {
                         <div>
-                            <h2>S3 Public Storage</h2>
-                            <h4>Select a backup:</h4>
-                            <input id="s3BackupsList" style="width: 100%;" />
+                            <div>
+                                <h2>S3 Public Storage</h2>
+                                <h4>Select a backup:</h4>
+                                <input id="s3BackupsList" style="width: 100%;" />
+                            </div>
                         </div>
-                    </div>
-                    <div>
+                    }
+                    @if (accessibleSolutions.Contains("ftp"))
+                    {
                         <div>
-                            <h2>File Transfer Protocol</h2>
-                            <h4>Select a backup:</h4>
-                            <input id="ftpBackupsList" style="width: 100%;" />
+                            <div>
+                                <h2>File Transfer Protocol</h2>
+                                <h4>Select a backup:</h4>
+                                <input id="ftpBackupsList" style="width: 100%;" />
+                            </div>
                         </div>
-                    </div>
-                    <div>
+                    }
+                    @if (accessibleSolutions.Contains("local"))
+                    {
                         <div>
-                            <div id="localContent">
+                            <div>
                                 <h2>Local Storage</h2>
                                 <h4>Select a backup:</h4>
                                 <input id="localBackupsList" style="width: 100%;" />
                             </div>
                         </div>
-                    </div>
+                    }
                 </div>
                 `,
         actions: [
@@ -126,7 +133,7 @@ function BackupFile(){
     $.ajax({
         type: "POST",
         url: "/Backup/BackupFile/@(Model.Service.ServiceId)",
-        data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").value() }),
+        data: JSON.stringify({ "file": selectedFiles[0].path, "backupType": $("#backupSolution").data("kendoDropDownList").text() }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         error: function (e) {
