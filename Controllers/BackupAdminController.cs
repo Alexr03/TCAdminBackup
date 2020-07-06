@@ -1,4 +1,5 @@
 ﻿using System.Web.Mvc;
+using Models.Settings;
 using TCAdmin.SDK.Web.MVC.Controllers;
 using TCAdminBackup.Configuration;
 
