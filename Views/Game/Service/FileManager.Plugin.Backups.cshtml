@@ -341,30 +341,19 @@ function UpdateCapacity(){
 }
 
 function selectedBackupSolution(){
-    const backupSolution = $("#backupTabStrip").data("kendoTabStrip").select().text();
+    const backupSolution = $("#backupTabStrip").data("kendoTabStrip").select().text().trim();
     return backupSolution.toUpperCase();
 }
 
 function selectedBackupList(){
-    const backupSolution = selectedBackupSolution();
-    if(backupSolution === "S3"){
-        return $("#s3BackupsList").data("kendoDropDownList")
-    } else if(backupSolution === "FTP"){
-        return $("#ftpBackupsList").data("kendoDropDownList")
-    } else if(backupSolution === "LOCAL"){
-        return $("#localBackupsList").data("kendoDropDownList")
-    }
-    
+    const backupSolution = selectedBackupSolution();    
     return $("#" + backupSolution.toLowerCase() + "BackupsList").data("kendoDropDownList")
 }
 
 function OnSuccess(e) {
-    if (e.responseText)
-        TCAdmin.Ajax.ShowBasicDialog("Success", e.responseText);
-    else if (e.statusText)
-        TCAdmin.Ajax.ShowBasicDialog("Success", e.statusText);
-    else
-        TCAdmin.Ajax.ShowBasicDialog("Success", e.errorThrown);
+    if(e.Message){
+        TCAdmin.Ajax.ShowBasicDialog("Success", e.Message);
+    }
 
     filemanager = $("#filemanager").getKendoFileManager();
     filemanager.refresh();
