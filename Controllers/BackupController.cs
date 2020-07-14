@@ -13,7 +13,6 @@ using TCAdmin.SDK.Web.MVC.Controllers;
 using TCAdminBackup.Configuration;
 using TCAdminBackup.Models;
 using TCAdminBackup.Models.Objects;
-using Server = TCAdmin.GameHosting.SDK.Objects.Server;
 using Service = TCAdmin.GameHosting.SDK.Objects.Service;
 
 namespace TCAdminBackup.Controllers
@@ -254,7 +253,7 @@ namespace TCAdminBackup.Controllers
 
             var s3Limit = service.Variables["S3:LIMIT"] != null
                 ? long.Parse(service.Variables["S3:LIMIT"].ToString())
-                : long.Parse(5_000_000_000.ToString());
+                : settings.DefaultS3Capacity;
             if (FileServer.GetFileServers().S3FileServers().Any() && s3Limit > 0 && settings.S3Enabled)
             {
                 accessibleSolutions.Add("s3");
@@ -262,13 +261,16 @@ namespace TCAdminBackup.Controllers
 
             var ftpLimit = service.Variables["Ftp:LIMIT"] != null
                 ? long.Parse(service.Variables["Ftp:LIMIT"].ToString())
-                : long.Parse(5_000_000_000.ToString());
+                : settings.DefaultFtpCapacity;
             if (FileServer.GetFileServers().FtpFileServers().Any() && ftpLimit > 0 && settings.FtpEnabled)
             {
                 accessibleSolutions.Add("ftp");
             }
 
-            if (settings.LocalEnabled)
+            var localLimit = service.Variables["Local:LIMIT"] != null
+                ? long.Parse(service.Variables["Local:LIMIT"].ToString())
+                : settings.DefaultLocalCapacity;
+            if (localLimit > 0 && settings.LocalEnabled)
             {
                 accessibleSolutions.Add("local");
             }
