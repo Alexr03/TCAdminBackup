@@ -1,5 +1,6 @@
 ﻿@using Kendo.Mvc.UI
 @using TCAdminBackup.Controllers
+@using TCAdminBackup.Models.Objects
 @model Models.Game.FileManager.FileManagerModel
 
 @{
@@ -32,7 +33,7 @@ filemanagerNS.commands.BackupCommand = filemanagerNS.FileManagerCommand.extend({
                 {
                     foreach (var solution in accessibleSolutions)
                     {
-                        i.Add().Text(solution.ToUpper()).Value(accessibleSolutions.IndexOf(solution).ToString());
+                        i.Add().Text(solution.ToString()).Value(accessibleSolutions.IndexOf(solution).ToString());
                     }
                 })
                 .OptionLabel("Select where to backup to.")
@@ -65,26 +66,26 @@ function BackupsPrompt() {
                 <div id="storageProgress" style="width: 100%;" />
                 <div id="backupTabStrip">
                     <ul>
-                        @if (accessibleSolutions.Contains("s3"))
+                        @if (accessibleSolutions.Contains(BackupType.S3))
                         {
                             <li>
-                                S3 Public Storage
+                                @BackupType.S3.ToString()
                             </li>
                         }
-                        @if (accessibleSolutions.Contains("ftp"))
+                        @if (accessibleSolutions.Contains(BackupType.Ftp))
                         {
                             <li>
-                                FTP
+                                @BackupType.Ftp.ToString()
                             </li>
                         }
-                        @if (accessibleSolutions.Contains("local"))
+                        @if (accessibleSolutions.Contains(BackupType.Local))
                         {
                             <li>
-                                Local
+                                @BackupType.Local.ToString()
                             </li>
                         }
                     </ul>
-                    @if (accessibleSolutions.Contains("s3"))
+                    @if (accessibleSolutions.Contains(BackupType.S3))
                     {
                         <div>
                             <div>
@@ -94,7 +95,7 @@ function BackupsPrompt() {
                             </div>
                         </div>
                     }
-                    @if (accessibleSolutions.Contains("ftp"))
+                    @if (accessibleSolutions.Contains(BackupType.Ftp))
                     {
                         <div>
                             <div>
@@ -104,7 +105,7 @@ function BackupsPrompt() {
                             </div>
                         </div>
                     }
-                    @if (accessibleSolutions.Contains("local"))
+                    @if (accessibleSolutions.Contains(BackupType.Local))
                     {
                         <div>
                             <div>
@@ -227,7 +228,7 @@ function OnBackupsPromptOpen(){
     
     tabStrip.select(0);
     
-    @if (accessibleSolutions.Contains("s3"))
+    @if (accessibleSolutions.Contains(BackupType.S3))
     {
         <text>           
             //S3 Backup List
@@ -251,7 +252,7 @@ function OnBackupsPromptOpen(){
             </text>
         }
         
-        @if (accessibleSolutions.Contains("ftp"))
+        @if (accessibleSolutions.Contains(BackupType.Ftp))
         {
             <text>
                 //FTP Backup List
@@ -275,7 +276,7 @@ function OnBackupsPromptOpen(){
             </text>
         }
         
-        @if (accessibleSolutions.Contains("local"))
+        @if (accessibleSolutions.Contains(BackupType.Local))
         {
             <text>
                 //Local Backup List
@@ -311,11 +312,7 @@ function UpdateCapacity(){
     if(selectedBackup == null){
         return;
     }
-    
-    if($("#storageProgress").data("kendoProgressBar") != null){
-        $("#storageProgress").data("kendoProgressBar").destroy();
-    }
-    
+        
     showTabStripLoading();
     // Storage Capacity
     $.ajax({
@@ -345,13 +342,7 @@ function UpdateCapacity(){
 
 function selectedBackupSolution(){
     const backupSolution = $("#backupTabStrip").data("kendoTabStrip").select().text();
-    if(backupSolution.includes("S3")){
-        return "S3";
-    } else if(backupSolution.includes("FTP")){
-        return "FTP";
-    } else if(backupSolution.includes("Local")){
-        return "LOCAL";
-    }
+    return backupSolution.toUpperCase();
 }
 
 function selectedBackupList(){
@@ -363,6 +354,8 @@ function selectedBackupList(){
     } else if(backupSolution === "LOCAL"){
         return $("#localBackupsList").data("kendoDropDownList")
     }
+    
+    return $("#" + backupSolution.toLowerCase() + "BackupsList").data("kendoDropDownList")
 }
 
 function OnSuccess(e) {

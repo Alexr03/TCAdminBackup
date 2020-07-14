@@ -244,10 +244,10 @@ namespace TCAdminBackup.Controllers
         }
 
         [ParentAction("Service", "Home")]
-        public static List<string> AccessibleSolutions(int id)
+        public static List<BackupType> AccessibleSolutions(int id)
         {
             var settings = GlobalBackupSettings.Get();
-            var accessibleSolutions = new List<string>();
+            var accessibleSolutions = new List<BackupType>();
             var user = TCAdmin.SDK.Session.GetCurrentUser();
             var service = Service.GetSelectedService();
 
@@ -256,7 +256,7 @@ namespace TCAdminBackup.Controllers
                 : settings.DefaultS3Capacity;
             if (FileServer.GetFileServers().S3FileServers().Any() && s3Limit > 0 && settings.S3Enabled)
             {
-                accessibleSolutions.Add("s3");
+                accessibleSolutions.Add(BackupType.S3);
             }
 
             var ftpLimit = service.Variables["Ftp:LIMIT"] != null
@@ -264,7 +264,7 @@ namespace TCAdminBackup.Controllers
                 : settings.DefaultFtpCapacity;
             if (FileServer.GetFileServers().FtpFileServers().Any() && ftpLimit > 0 && settings.FtpEnabled)
             {
-                accessibleSolutions.Add("ftp");
+                accessibleSolutions.Add(BackupType.Ftp);
             }
 
             var localLimit = service.Variables["Local:LIMIT"] != null
@@ -272,7 +272,7 @@ namespace TCAdminBackup.Controllers
                 : settings.DefaultLocalCapacity;
             if (localLimit > 0 && settings.LocalEnabled)
             {
-                accessibleSolutions.Add("local");
+                accessibleSolutions.Add(BackupType.Local);
             }
 
             return accessibleSolutions;
