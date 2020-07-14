@@ -29,7 +29,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "Please choose a file to backup."
+                    Message = "Please choose a file to backup."
                 }, HttpStatusCode.BadRequest);
             }
 
@@ -40,7 +40,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "File contains invalid characters."
+                    Message = "File contains invalid characters."
                 }, HttpStatusCode.BadRequest);
             }
 
@@ -54,7 +54,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "Backing up this file will exceed your assigned capacity."
+                    Message = "Backing up this file will exceed your assigned capacity."
                 }, HttpStatusCode.BadRequest);
             }
 
@@ -62,7 +62,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = $"Backup already exists with name <strong>{realFileName}</strong>"
+                    Message = $"Backup already exists with name <strong>{realFileName}</strong>"
                 }, HttpStatusCode.BadRequest);
             }
 
@@ -92,17 +92,15 @@ namespace TCAdminBackup.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "Failed to backup - " + e.Message + " | " + e.StackTrace
+                    Message = "Failed to backup - " + e.Message + " | " + e.StackTrace
                 }, HttpStatusCode.InternalServerError);
             }
 
             return Json(new
             {
-                responseText = $"Backed up <strong>{backupName}</strong>"
+                Message = $"Backed up <strong>{backupName}</strong>"
             });
         }
 
@@ -114,7 +112,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "No backup selected to restore."
+                    Message = "No backup selected to restore."
                 }, HttpStatusCode.InternalServerError);
             }
 
@@ -146,14 +144,14 @@ namespace TCAdminBackup.Controllers
 
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = $"Restored <strong>{backup.FileName}</strong>"
+                    Message = $"Restored <strong>{backup.FileName}</strong>"
                 }, HttpStatusCode.OK);
             }
             catch (Exception e)
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "An error occurred: " + e.Message + " | " + e.StackTrace
+                    Message = "An error occurred: " + e.Message + " | " + e.StackTrace
                 }, HttpStatusCode.InternalServerError);
             }
         }
@@ -166,7 +164,7 @@ namespace TCAdminBackup.Controllers
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "No backup selected to delete."
+                    Message = "No backup selected to delete."
                 }, HttpStatusCode.InternalServerError);
             }
 
@@ -179,14 +177,14 @@ namespace TCAdminBackup.Controllers
                 backup.Delete();
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = $"Deleted <strong>{backup.FileName}</strong>"
+                    Message = $"Deleted <strong>{backup.FileName}</strong>"
                 }, HttpStatusCode.OK);
             }
             catch (Exception e)
             {
                 return new JsonHttpStatusResult(new
                 {
-                    responseText = "An error occurred: " + e.Message
+                    Message = "An error occurred: " + e.Message
                 }, HttpStatusCode.InternalServerError);
             }
         }
