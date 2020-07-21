@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -141,7 +142,7 @@ namespace TCAdminBackup.Controllers
                         fileSystem.AppendFile(saveTo, byteBuffer);
                     }
                 }
-
+                
                 return new JsonHttpStatusResult(new
                 {
                     Message = $"Restored <strong>{backup.FileName}</strong>"
