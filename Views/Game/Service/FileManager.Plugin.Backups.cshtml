@@ -127,6 +127,7 @@ function BackupsPrompt() {
 }
 
 function BackupFile(){
+    if ($("#backupSolution").data("kendoDropDownList").value() == "") { return false; }
     const fileManager = $("#filemanager").getKendoFileManager();
     let selectedFiles = fileManager.getSelected();
     kendo.ui.progress($(".k-filemanager-view"), true);
