@@ -3,3 +3,6 @@ obj/
 outputdeployment/
 *.zip
 *.user
+/.vs
+/packages
+/TCAdminBackup.sln

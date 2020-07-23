@@ -11,6 +11,7 @@ using System.Web.Mvc;
 using TCAdmin.SDK.Objects;
 using TCAdmin.SDK.Web.FileManager;
 using TCAdmin.SDK.Web.MVC.Controllers;
+using TCAdmin.Web.MVC;
 using TCAdminBackup.Configuration;
 using TCAdminBackup.Models;
 using TCAdminBackup.Models.Objects;
@@ -18,6 +19,7 @@ using Service = TCAdmin.GameHosting.SDK.Objects.Service;
 
 namespace TCAdminBackup.Controllers
 {
+    [ExceptionHandler]
     [Authorize]
     public class BackupController : BaseServiceController
     {
@@ -25,6 +27,11 @@ namespace TCAdminBackup.Controllers
         [HttpPost]
         public async Task<ActionResult> BackupFile(int id, string file, BackupType backupType = BackupType.S3)
         {
+            var service = Service.GetSelectedService();
+            var server = TCAdmin.GameHosting.SDK.Objects.Server.GetSelectedServer();
+            var dirsec = service.GetDirectorySecurityForCurrentUser();
+            var vdir = new TCAdmin.SDK.VirtualFileSystem.VirtualDirectory(server.OperatingSystem, dirsec);
+
             this.EnforceFeaturePermission("FileManager");
             if (string.IsNullOrEmpty(file))
             {
@@ -45,11 +52,10 @@ namespace TCAdminBackup.Controllers
                 }, HttpStatusCode.BadRequest);
             }
 
-            var service = Service.GetSelectedService();
-            var server = TCAdmin.GameHosting.SDK.Objects.Server.GetSelectedServer();
+
             var fileSystem = server.FileSystemService;
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
-            var filePath = Path.Combine(service.WorkingDirectory, file);
+            var filePath = vdir.CombineWithPhysicalPath(file);
             var fileSize = fileSystem.GetFileSize(filePath);
             if (GetBackupsSize(service, backupType) + fileSize > GetBackupsLimit(service, backupType))
             {
@@ -118,13 +124,17 @@ namespace TCAdminBackup.Controllers
             }
 
             var service = Service.GetSelectedService();
+            var server = TCAdmin.GameHosting.SDK.Objects.Server.GetSelectedServer();
+            var dirsec = service.GetDirectorySecurityForCurrentUser();
+            var vdir = new TCAdmin.SDK.VirtualFileSystem.VirtualDirectory(server.OperatingSystem, dirsec);
             var fileSystem = TCAdmin.SDK.Objects.Server.GetSelectedServer().FileSystemService;
             var backup = new Backup(backupId);
             var backupSolution = backup.BackupSolution;
 
             try
             {
-                var saveTo = Path.Combine(service.WorkingDirectory, target, backup.FileName);
+                var targetpath = vdir.CombineWithPhysicalPath(target);
+                var saveTo = TCAdmin.SDK.Misc.FileSystem.CombinePath(targetpath, backup.FileName, server.OperatingSystem);
 
                 if (backupSolution.AllowsDirectDownload)
                 {
@@ -136,11 +146,19 @@ namespace TCAdminBackup.Controllers
                     var bytes = await backupSolution.DownloadBytes(backup.FileName);
                     var memoryStream = new MemoryStream(bytes);
                     var byteBuffer = new byte[1024 * 1024 * 2];
+                    int bytesread;
                     memoryStream.Position = 0;
-                    while (memoryStream.Read(byteBuffer, 0, byteBuffer.Length) > 0)
+
+                    if (fileSystem.FileExists(saveTo))
                     {
-                        fileSystem.AppendFile(saveTo, byteBuffer);
+                        fileSystem.DeleteFile(saveTo);
                     }
+
+                    while ((bytesread = memoryStream.Read(byteBuffer, 0, byteBuffer.Length)) > 0)
+                    {
+                        fileSystem.AppendFile(saveTo, byteBuffer.Take(bytesread).ToArray());
+                    }
+                    fileSystem.SetOwnerAutomatically(saveTo);
                 }
                 
                 return new JsonHttpStatusResult(new
