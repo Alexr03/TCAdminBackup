@@ -127,7 +127,6 @@ function BackupsPrompt() {
 }
 
 function BackupFile(){
-    if ($("#backupSolution").data("kendoDropDownList").value() == "") { return false; }
     const fileManager = $("#filemanager").getKendoFileManager();
     let selectedFiles = fileManager.getSelected();
     kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), true);
@@ -186,6 +185,7 @@ function DeleteBackup(){
 }
 
 function RestoreBackup(){
+    if ($("#backupSolution").data("kendoDropDownList").value() == "") { return false; }
     const fileManager = $("#filemanager").getKendoFileManager();
     const backups = selectedBackupList();
     const backupId = backups.value();
