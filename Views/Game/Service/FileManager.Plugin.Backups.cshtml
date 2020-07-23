@@ -130,7 +130,7 @@ function BackupFile(){
     if ($("#backupSolution").data("kendoDropDownList").value() == "") { return false; }
     const fileManager = $("#filemanager").getKendoFileManager();
     let selectedFiles = fileManager.getSelected();
-    kendo.ui.progress($(".k-filemanager-view"), true);
+    kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), true);
     
     $.ajax({
         type: "POST",
@@ -139,12 +139,12 @@ function BackupFile(){
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         error: function (e) {
-            kendo.ui.progress($(".k-filemanager-view"), false);
+            kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), false);
             OnError(e);
         },
         success: function (e) {
             fileManager.refresh();
-            kendo.ui.progress($(".k-filemanager-view"), false);
+            kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), false);
             OnSuccess(e);
         }
     });
@@ -189,7 +189,7 @@ function RestoreBackup(){
     const fileManager = $("#filemanager").getKendoFileManager();
     const backups = selectedBackupList();
     const backupId = backups.value();
-    kendo.ui.progress($(".k-fileManager-view"), true);
+    kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), true);
 
     $.ajax({
         type: "POST",
@@ -198,12 +198,12 @@ function RestoreBackup(){
         contentType: "application/json; charset=utf-8",
         dataType: "json",
         error: function (e) {
-            kendo.ui.progress($(".k-fileManager-view"), false);
+            kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), false);
             OnError(e);
         },
         success: function (e) {
             fileManager.refresh();
-            kendo.ui.progress($(".k-fileManager-view"), false);
+            kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), false);
             OnSuccess(e);
         }
     });
