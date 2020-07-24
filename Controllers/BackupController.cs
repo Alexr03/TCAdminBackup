@@ -51,8 +51,7 @@ namespace TCAdminBackup.Controllers
                     Message = "File contains invalid characters."
                 }, HttpStatusCode.BadRequest);
             }
-
-
+            
             var fileSystem = server.FileSystemService;
             var backupSolution = Backup.ParseBackupSolution(backupType, service);
             var filePath = vdir.CombineWithPhysicalPath(file);
