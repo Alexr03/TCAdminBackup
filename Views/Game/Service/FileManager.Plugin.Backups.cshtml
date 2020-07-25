@@ -185,10 +185,10 @@ function DeleteBackup(){
 }
 
 function RestoreBackup(){
-    if ($("#backupSolution").data("kendoDropDownList").value() == "") { return false; }
     const fileManager = $("#filemanager").getKendoFileManager();
     const backups = selectedBackupList();
     const backupId = backups.value();
+    if (backupId == "") { return false; }
     kendo.ui.progress($(".k-filemanager-listview, .k-filemanager-grid"), true);
 
     $.ajax({
