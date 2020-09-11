@@ -35,8 +35,8 @@ namespace TCAdminBackup.BackupSolutions
             var fileLocation = this.BucketName + "/" + fileName;
 
             var ftpStatus = FtpClient.Upload(contents, fileLocation, createRemoteDir: true);
-
-            return Task.FromResult(ftpStatus == FtpStatus.Success);
+            
+            return System.Threading.Tasks.Task.FromResult(ftpStatus == FtpStatus.Success);
         }
 
         public override Task<byte[]> DownloadBytes(string fileName)
@@ -45,7 +45,7 @@ namespace TCAdminBackup.BackupSolutions
 
             FtpClient.Download(out var content, fileLocation);
 
-            return Task.FromResult(content);
+            return System.Threading.Tasks.Task.FromResult(content);
         }
 
         public override Task<string> DirectDownloadLink(string fileName)
@@ -59,7 +59,7 @@ namespace TCAdminBackup.BackupSolutions
             
             FtpClient.DeleteFile(fileLocation);
 
-            return Task.FromResult(true);
+            return System.Threading.Tasks.Task.FromResult(true);
         }
     }
 }

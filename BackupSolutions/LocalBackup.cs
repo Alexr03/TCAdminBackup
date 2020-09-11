@@ -42,7 +42,7 @@ namespace TCAdminBackup.BackupSolutions
                 _fileSystemService.AppendFile(saveTo, byteBuffer);
             }
 
-            return Task.FromResult(true);
+            return System.Threading.Tasks.Task.FromResult(true);
         }
 
         public override Task<byte[]> DownloadBytes(string fileName)
@@ -60,7 +60,7 @@ namespace TCAdminBackup.BackupSolutions
                 FileName = saveTo
             };
 
-            return Task.FromResult(remoteDownload.GetDownloadUrl());
+            return System.Threading.Tasks.Task.FromResult(remoteDownload.GetDownloadUrl());
         }
 
         public override Task<bool> Delete(string fileName)
@@ -68,7 +68,7 @@ namespace TCAdminBackup.BackupSolutions
             var saveTo = Path.Combine(GlobalBackupSettings.LocalDirectory.ReplaceVariables(Service), fileName);
             _fileSystemService.DeleteFile(saveTo);
             
-            return Task.FromResult(true);
+            return System.Threading.Tasks.Task.FromResult(true);
         }
     }
 }
